@@ -5,24 +5,44 @@ var io = require('socket.io')(http);
 var MongoClient = require('mongodb');
 var dbUrl = "mongodb://localhost:27017/players";
 
+var debugging = 0;
+
 app.use(express.static(__dirname + '/client'));
 
-http.listen(90, function(){
+http.listen(91, function(){
     console.log('Server started');
 });
 
-io.on('connection', function(socket){
-    console.log('connection found');
-    socket.emit('data', {name: 'dan'});
+var players = [];
 
-    socket.on('playPressed', function(data){
-        if (data.playerName.length > 2) console.log('player ' + data.playerName + ' pressed play');
-        else socket.emit('invalidName');
+io.on('connection', function(socket){
+    socket.on('playerInfo', function(data){
+        
+        if(debugging){
+            console.log(data.name.length + ' <- name' + data.password);
+            console.log(data.password.length + ' <- password' + data.password);
+        }
+
+        if(data.name.length === 0) socket.emit('playerInfoLogin', {info: 'username'});
+        else if(data.password.length === 0) socket.emit('playerInfoLogin', {info: 'password'});
+        else {
+            players[socket.id] = {
+                name: data.name,
+                password: data.password,
+                state: 'loggedIn'
+            };
+
+            socket.emit('playerInfoLogin', {info: 'logged'});
+        }
+
     });
-    socket.on('attackPressed', function(data){
-        console.log('attack launched on: ' + data.possitionX + ' ' + data.possitionY);
-    });
-    socket.on('movePressed', function(data){
-        console.log('moved on: ' + data.possitionX + ' ' + data.possitionY);
-    });
+
+    /*socket.on('disconnect', function(){
+        console.log(players[socket.id].name);
+        console.log(players[socket.id].password);
+        console.log(players[socket.id].state);
+    });*/
+
+
+
 });
