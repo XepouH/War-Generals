@@ -1,0 +1,20 @@
+{
+  "name": "uni-project",
+  "version": "1.0.0",
+  "description": "Card-strategy game.",
+  "main": "app.js",
+  "scripts": {
+    "test": "console.log('started')"
+  },
+  "keywords": [
+    "card",
+    "strategy"
+  ],
+  "author": "Daniel-Angelov Georgi-Dochev",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.16.2",
+    "mongodb": "^2.2.33",
+    "socket.io": "^2.0.4"
+  }
+}
