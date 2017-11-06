@@ -102,16 +102,34 @@
                 console.log('room id(' + $('#roomId').val() + ') sumitted');
             });
             socket.on('roomInfo', function(data) {
-                var tileColor = ccc;
+                var tileColor;
                 for (var index = 0; index < data.mapData.length; index++) {
                     console.log('index: ', index);
                     for (var indexSecond = 0; indexSecond < data.mapData[index].length; indexSecond++) {
-                        console.log('indexSecond: ', indexSecond);
+                        console.log(data.mapData[index]);
                         switch (data.mapData[index][indexSecond]) {
+                            case 'rc':
+                                tileColor = '#dd1111';
+                                break;
+                            case 'rm':
+                                tileColor = '#ed8f0b';
+                                break;
+                            case 'rr':
+                                tileColor = '#f4e50e';
+                                break;
+                            case 'bc':
+                                tileColor = '#113fd8';
+                                break;
                             case 'bm':
-                                tileColor = d000ff;
+                                tileColor = '#35d11d';
+                                break;
+                            case 'br':
+                                tileColor = '#b21cd1';
+                                break;
+                            default:
+                                tileColor = 'gray';
                         }
-                        $('#' + index + '-' + indexSecond).css('background-color', 'black');
+                        $('#' + index + '-' + indexSecond).css('background-color', tileColor);
                     }
                 }
             });
