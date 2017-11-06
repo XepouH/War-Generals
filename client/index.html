@@ -1,84 +1,111 @@
 <!DOCTYPE html5>
 
 <html>
-    <head>
-        <title>War Generals</title>
-        <script src="assets\js\socket.io.js"></script>
-        <script src="assets\js\jquery.min.js"></script>
-        <style>
-            .container-game {
-              width: 1000px; 
-              line-height: 1.3;
-              margin-top: 5em;
-              display: none;
-            }
-            ol.even {
-              position: relative;
-              left: 5.5em;
-            }
-            ol.odd {
-              position: relative;
-              margin-top: -6.5%;
-              margin-bottom: -6.5%;
-            }
-            .hex {
-              position: relative;
-              margin: 1em auto;
-              width: 5em; 
-              height: 8.5em;
-              border-radius: 1em/.5em;
-              background: #ccc;
-              transform: rotate(-90deg);
-              display: inline-block;
-              margin-right: 6.5em;
-              transition: all 150ms ease-in-out;
-            }
-            .hex:before, .hex:after {
-              position: absolute;
-              width: inherit; height: inherit;
-              border-radius: inherit;
-              background: inherit;
-              content: '';
-            }
-            .hex:before {
-              transform: rotate(60deg);
-            }
-            .hex:after {
-              transform: rotate(-60deg);
-            }
-            .hex:hover {
-              background: #F58787;
-              cursor: pointer;
-            }
-            
-        </style>
-    </head>
 
-    <body>
+<head>
+    <title>War Generals</title>
+    <script src="assets\js\socket.io.js"></script>
+    <script src="assets\js\jquery.min.js"></script>
+    <style>
+        .container-game {
+            width: 1000px;
+            line-height: 1.3;
+            margin-top: 5em;
+            display: none;
+        }
+        
+        ol.even {
+            position: relative;
+            left: 5.5em;
+        }
+        
+        ol.odd {
+            position: relative;
+            margin-top: -6.5%;
+            margin-bottom: -6.5%;
+        }
+        
+        .hex {
+            position: relative;
+            margin: 1em auto;
+            width: 5em;
+            height: 8.5em;
+            border-radius: 1em/.5em;
+            background: #ccc;
+            transform: rotate(-90deg);
+            display: inline-block;
+            margin-right: 6.5em;
+            transition: all 150ms ease-in-out;
+        }
+        
+        .hex:before,
+        .hex:after {
+            position: absolute;
+            width: inherit;
+            height: inherit;
+            border-radius: inherit;
+            background: inherit;
+            content: '';
+        }
+        
+        .hex:before {
+            transform: rotate(60deg);
+        }
+        
+        .hex:after {
+            transform: rotate(-60deg);
+        }
+        
+        .hex:hover {
+            background: #F58787;
+            cursor: pointer;
+        }
+        
+        .roomInfo {
+            display: none;
+        }
+    </style>
+</head>
 
-        <script>
-            
-            var socket = io();
-            $(document).ready(function(){
-                socket.on('playerInfoLogin', function(data){
-                    switch(data.info){
-                        case 'username': console.log('username error'); break;
-                        case 'password': console.log('password error'); break;
-                        case 'logged': console.log('display some stuff'); 
-                                        $('.login').css('display', 'none');
-                                        $('.container-game').css('display', 'block');
-                                        break;
-                    }
-                });
+<body>
 
-                $('#submitPlayerInfo').click(function(){
-                    console.log('button pressed');
-                    socket.emit('playerInfo', {name: $('#name').val(), password: $('#password').val()});
+    <script>
+        var socket = io();
+        $(document).ready(function() {
+            socket.on('playerInfoLogin', function(data) {
+                switch (data.info) {
+                    case 'username':
+                        console.log('username error');
+                        break;
+                    case 'password':
+                        console.log('password error');
+                        break;
+                    case 'logged':
+                        console.log('display some stuff');
+                        $('.login').css('display', 'none');
+                        $('.roomInfo').css('display', 'block');
+                        break;
+                }
+            });
+
+            $('#submitPlayerInfo').click(function() {
+                console.log('button pressed');
+                socket.emit('playerInfo', {
+                    name: $('#name').val(),
+                    password: $('#password').val()
                 });
             });
-            
-            
-        </script>
+            $('#roomIdSubmit').click(function() {
+                socket.emit('joinRoomReq', {
+                    room: $('#roomId').val()
+                });
+                console.log('room id(' + $('#roomId').val() + ') sumitted');
+            });
+            socket.on('roomName', function(data) {
+                console.log(data.room);
+            });
+        });
+    </script>
 
     <div class="login">
 
@@ -89,54 +116,59 @@
 
     </div>
 
+    <div class="roomInfo">
+        <input type="text" placeholder="Room name" id="roomId">
+        <input type="button" value="Join" id="roomIdSubmit">
+    </div>
 
-    <div class="container-game">  
-    <ol class="odd">
-        <li id="0-0" class='hex'></li>
-        <li id="0-1" class='hex'></li>
-        <li id="0-2" class='hex'></li>
-        <li id="0-3" class='hex'></li>
-        <li id="0-4" class='hex'></li>
-    </ol>
-    <ol class="even">
-        <li id="1-0" class='hex'></li>
-        <li id="1-1" class='hex'></li>
-        <li id="1-2" class='hex'></li>
-        <li id="1-3" class='hex'></li>
-    </ol>
-    <ol class="odd">
-        <li id="2-0" class='hex'></li>
-        <li id="2-1" class='hex'></li>
-        <li id="2-2" class='hex'></li>
-        <li id="2-3" class='hex'></li>
-        <li id="2-4" class='hex'></li>
-    </ol>
-    <ol class="even">
-        <li id="3-0" class='hex'></li>
-        <li id="3-1" class='hex'></li>
-        <li id="3-2" class='hex'></li>
-        <li id="3-3" class='hex'></li>
-    </ol>
-    <ol class="odd">
-        <li id="4-0" class='hex'></li>
-        <li id="4-1" class='hex'></li>
-        <li id="4-2" class='hex'></li>
-        <li id="4-3" class='hex'></li>
-        <li id="4-4" class='hex'></li>
-    </ol>
-    <ol class="even">
-        <li id="5-0" class='hex'></li>
-        <li id="5-1" class='hex'></li>
-        <li id="5-2" class='hex'></li>
-        <li id="5-3" class='hex'></li>
-    </ol>
-    <ol class="odd">
-        <li id="6-0" class='hex'></li>
-        <li id="6-1" class='hex'></li>
-        <li id="6-2" class='hex'></li>
-        <li id="6-3" class='hex'></li>
-        <li id="6-4" class='hex'></li>
-    </ol>  
-      </div>
-    </body>
+    <div class="container-game">
+        <ol class="odd">
+            <li id="0-0" class='hex'></li>
+            <li id="0-1" class='hex'></li>
+            <li id="0-2" class='hex'></li>
+            <li id="0-3" class='hex'></li>
+            <li id="0-4" class='hex'></li>
+        </ol>
+        <ol class="even">
+            <li id="1-0" class='hex'></li>
+            <li id="1-1" class='hex'></li>
+            <li id="1-2" class='hex'></li>
+            <li id="1-3" class='hex'></li>
+        </ol>
+        <ol class="odd">
+            <li id="2-0" class='hex'></li>
+            <li id="2-1" class='hex'></li>
+            <li id="2-2" class='hex'></li>
+            <li id="2-3" class='hex'></li>
+            <li id="2-4" class='hex'></li>
+        </ol>
+        <ol class="even">
+            <li id="3-0" class='hex'></li>
+            <li id="3-1" class='hex'></li>
+            <li id="3-2" class='hex'></li>
+            <li id="3-3" class='hex'></li>
+        </ol>
+        <ol class="odd">
+            <li id="4-0" class='hex'></li>
+            <li id="4-1" class='hex'></li>
+            <li id="4-2" class='hex'></li>
+            <li id="4-3" class='hex'></li>
+            <li id="4-4" class='hex'></li>
+        </ol>
+        <ol class="even">
+            <li id="5-0" class='hex'></li>
+            <li id="5-1" class='hex'></li>
+            <li id="5-2" class='hex'></li>
+            <li id="5-3" class='hex'></li>
+        </ol>
+        <ol class="odd">
+            <li id="6-0" class='hex'></li>
+            <li id="6-1" class='hex'></li>
+            <li id="6-2" class='hex'></li>
+            <li id="6-3" class='hex'></li>
+            <li id="6-4" class='hex'></li>
+        </ol>
+    </div>
+</body>
+
 </html>
