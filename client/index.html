@@ -101,8 +101,25 @@
                 });
                 console.log('room id(' + $('#roomId').val() + ') sumitted');
             });
-            socket.on('roomName', function(data) {
-                console.log(data.room);
+            socket.on('roomInfo', function(data) {
+                var tileColor = ccc;
+                for (var index = 0; index < data.mapData.length; index++) {
+                    console.log('index: ', index);
+                    for (var indexSecond = 0; indexSecond < data.mapData[index].length; indexSecond++) {
+                        console.log('indexSecond: ', indexSecond);
+                        switch (data.mapData[index][indexSecond]) {
+                            case 'bm':
+                                tileColor = d000ff;
+                        }
+                        $('#' + index + '-' + indexSecond).css('background-color', 'black');
+                    }
+                }
+            });
+            socket.on('enteredRoom', function(data) {
+                if (data.info) {
+                    $('.roomInfo').css('display', 'none');
+                    $('.container-game').css('display', 'block');
+                }
             });
         });
     </script>

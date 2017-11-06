@@ -42,7 +42,8 @@ io.on('connection', function(socket) {
                 name: data.name,
                 password: data.password,
                 state: 'menu',
-                room: ''
+                room: '',
+                id: socket.id
             };
 
             socket.emit('playerInfoLogin', { info: 'logged' });
@@ -56,45 +57,47 @@ io.on('connection', function(socket) {
             rooms.forEach(function(element) {
                 if (element.name.toLowerCase() === data.room.toLowerCase()) {
                     if (!element.full) {
-                        players[socket.id].room = data.room;
+                        enterRoom(socket, element);
                         element.full = true;
                         opponent = socket.id;
                         roomFound = true;
-                        console.log('found room not full room');
                     } else {
                         socket.emit('roomInfo', { info: 'full' });
-                        console.log('found a full room');
                         roomFound = true;
                     }
                 }
                 console.log(element.name.toLowerCase() + ' ' + data.room.toLowerCase());
             }, this);
             if (!roomFound) {
-                rooms.push({
+                rooms[socket.id] = {
                     name: data.room,
                     full: false,
                     roomMap: map,
                     id: socket.id,
                     opponent: ''
-                });
-                console.log('room created');
-                console.log('room status: ' + rooms[0].full);
+                };
+                enterRoom(socket, rooms[socket.id]);
             }
         }
     });
 
-    socket.on('playPacket', function(data) {
-
+    socket.on('disconnect', function() {
+        delete players[socket.id];
+        delete rooms[socket.id];
     });
 
     setInterval(function() {
-        rooms.forEach(function(element) {
-            if (element.id === socket.id || element.opponent === socket.id) {
-                socket.emit('roomName: ' + { room: element.name });
+        players.forEach(function(element) {
+            if (element.state === 'room') {
+                if (rooms[element.roomId]) socket.emit('roomInfo', { mapData: rooms[element.roomId].roomMap });
             }
-
         }, this);
-        //console.log(rooms);
     }, 10000);
-
 });
+
+function enterRoom(socket, element) {
+    players[socket.id].roomName = element.name;
+    players[socket.id].roomId = element.id;
+    players[socket.id].state = 'room';
+    socket.emit('enteredRoom', { info: true });
+}
