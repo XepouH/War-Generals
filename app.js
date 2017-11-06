@@ -14,6 +14,15 @@ http.listen(91, function(){
 });
 
 var players = [];
+var room = [
+    [0,0,0,0,0],
+    [0,0,0,0],
+    [0,0,0,0,0],
+    [0,0,0,0],
+    [0,0,0,0,0],
+    [0,0,0,0],
+    [0,0,0,0,0]
+];
 
 io.on('connection', function(socket){
     socket.on('playerInfo', function(data){
@@ -29,12 +38,16 @@ io.on('connection', function(socket){
             players[socket.id] = {
                 name: data.name,
                 password: data.password,
-                state: 'loggedIn'
+                state: 'playing'
             };
 
             socket.emit('playerInfoLogin', {info: 'logged'});
         }
 
+    });
+
+    socket.on('playPacket', function(data){
+        
     });
 
     /*socket.on('disconnect', function(){
