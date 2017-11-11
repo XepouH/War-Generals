@@ -4,27 +4,33 @@
 
 <head>
     <title>War Generals</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="assets\js\socket.io.js"></script>
     <script src="assets\js\jquery.min.js"></script>
+    <link rel="stylesheet" href="assets\css\bootstrap.min.css" />
+    <link rel="stylesheet" href="assets\css\Login-Form-Clean.css" />
     <style>
         .container-game {
             width: 1000px;
             line-height: 1.3;
             margin-top: 5em;
             display: none;
+            margin-right: auto;
+            margin-left: auto;
         }
-        
+
         ol.even {
             position: relative;
             left: 5.5em;
         }
-        
+
         ol.odd {
             position: relative;
             margin-top: -6.5%;
             margin-bottom: -6.5%;
         }
-        
+
         .hex {
             position: relative;
             margin: 1em auto;
@@ -34,10 +40,11 @@
             background: #ccc;
             transform: rotate(-90deg);
             display: inline-block;
-            margin-right: 6.5em;
+            margin-right: 6em;
+            margin-top: 2em;
             transition: all 150ms ease-in-out;
         }
-        
+
         .hex:before,
         .hex:after {
             position: absolute;
@@ -47,22 +54,30 @@
             background: inherit;
             content: '';
         }
-        
+
         .hex:before {
             transform: rotate(60deg);
         }
-        
+
         .hex:after {
             transform: rotate(-60deg);
         }
-        
+
         .hex:hover {
             background: #F58787;
             cursor: pointer;
         }
-        
+
         .roomInfo {
             display: none;
+        }
+
+        .container-info {
+            float: right;
+            border: 1px solid black;
+            display: none;
+            transition-duration: 2s;
+            transition-timing-function: ease-in;
         }
     </style>
 </head>
@@ -70,9 +85,11 @@
 <body>
 
     <script>
+        var mapStorage;
         var socket = io();
-        $(document).ready(function() {
-            socket.on('playerInfoLogin', function(data) {
+        $(document).ready(function () {
+            //Login error check.
+            socket.on('playerInfoLogin', function (data) {
                 switch (data.info) {
                     case 'username':
                         console.log('username error');
@@ -82,32 +99,33 @@
                         break;
                     case 'logged':
                         console.log('display some stuff');
-                        $('.login').css('display', 'none');
+                        $('.login-clean').css('display', 'none');
                         $('.roomInfo').css('display', 'block');
                         break;
                 }
             });
-
-            $('#submitPlayerInfo').click(function() {
+            //Emitting room requst.
+            $('#submitPlayerInfo').click(function () {
                 console.log('button pressed');
                 socket.emit('playerInfo', {
                     name: $('#name').val(),
                     password: $('#password').val()
                 });
             });
-            $('#roomIdSubmit').click(function() {
+            //Emitting room request
+            $('#roomIdSubmit').click(function () {
                 socket.emit('joinRoomReq', {
                     room: $('#roomId').val()
                 });
                 console.log('room id(' + $('#roomId').val() + ') sumitted');
             });
-            socket.on('roomInfo', function(data) {
+            //Map coloring
+            socket.on('roomInfo', function (data) {
                 var tileColor;
+                mapStorage = data.mapData;
                 for (var index = 0; index < data.mapData.length; index++) {
-                    console.log('index: ', index);
                     for (var indexSecond = 0; indexSecond < data.mapData[index].length; indexSecond++) {
-                        console.log(data.mapData[index]);
-                        switch (data.mapData[index][indexSecond]) {
+                        switch (data.mapData[index][indexSecond].value) {
                             case 'rc':
                                 tileColor = '#dd1111';
                                 break;
@@ -133,22 +151,71 @@
                     }
                 }
             });
-            socket.on('enteredRoom', function(data) {
+            //Once entered in room change some css.
+            socket.on('enteredRoom', function (data) {
                 if (data.info) {
                     $('.roomInfo').css('display', 'none');
-                    $('.container-game').css('display', 'block');
+                    $('.container-game').css('display', 'inline-block');
+                    $('.container-info').css('display', 'inline-block');
                 }
+            });
+            //Code responsible for tile responsivness
+            $('.hex').click(function (event) {
+                console.log('Clicked on tile: ' + event.target.id);
+                var unitName, unitPack = mapStorage[event.target.id[0]][event.target.id[2]];
+                switch (unitPack.value) {
+                    case 'rc':
+                        unitName = 'Red Capital';
+                        break;
+                    case 'rm':
+                        unitName = 'Red Melee Unit';
+                        break;
+                    case 'rr':
+                        unitName = 'Red Ranged Unit';
+                        break;
+                    case 'bc':
+                        unitName = 'Blue Capital';
+                        break;
+                    case 'bm':
+                        unitName = 'Blue Melee Unit';
+                        break;
+                    case 'br':
+                        unitName = 'Blue Ranged Unit';
+                        break;
+                    default: unitName = '-';
+                }
+                $('#selectedUnitName').html(unitName);
+                $('#selectedUnitHp').html(unitPack.hp);
+                $('#selectedUnitArmour').html(unitPack.ar);
+                console.log("selected unit: " + mapStorage[event.target.id[0]][event.target.id[2]].value);
+            });
+            socket.on('turnIndicator', function (data) {
+                console.log(data.turn);
+                if (data.turn) $('#gamePhaseTracker').html('Your turn');
+                else $('#gamePhaseTracker').html('Oponnent turn');
+            });
+            $('#turnButton').click(function () {
+                socket.emit('turnFinish');
             });
         });
     </script>
 
-    <div class="login">
-
-        <input type="text" id="name" placeholder="username">
-        <input type="text" id="password" placeholder="password">
-
-        <input type="button" id="submitPlayerInfo" value="login">
-
+    <div class="login-clean">
+        <form>
+            <h2 class="sr-only">Login Form</h2>
+            <div class="illustration">
+                <img src="assets/img/logo.png" style="width:100%;">
+            </div>
+            <div class="form-group">
+                <input class="form-control" type="text" id="name" placeholder="Потребителско име">
+            </div>
+            <div class="form-group">
+                <input class="form-control" type="password" id="password" name="password" placeholder="Парола">
+            </div>
+            <div class="form-group">
+                <button class="btn btn-primary btn-block" type="button" id="submitPlayerInfo" style="background-color:rgb(1,0,3);">Вход</button>
+            </div>
+        </form>
     </div>
 
     <div class="roomInfo">
@@ -204,6 +271,26 @@
             <li id="6-4" class='hex'></li>
         </ol>
     </div>
+
+    <div class="container-info">
+        <br />
+        <h1>GAME PHASE:
+            <span id="gamePhaseTracker"></span>
+        </h1>
+        <hr />
+        <p>Name:
+            <span id="selectedUnitName"></span>
+        </p>
+        <p>Health:
+            <span id="selectedUnitHp"></span>
+        </p>
+        <p>Armour:
+            <span id="selectedUnitArmour"></span>
+        </p>
+        <hr />
+        <input type="button" value="Turn" id="turnButton">
+    </div>
+
 </body>
 
 </html>
