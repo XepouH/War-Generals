@@ -3,7 +3,7 @@
 <html>
 
 <head>
-    <title>War Generals</title>
+    <title>Military Commanders</title>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="assets\js\socket.io.js"></script>
@@ -87,8 +87,45 @@
     <script>
         var mapStorage;
         var socket = io();
+
+        function adjecent(sX, sY) {
+
+            for (var i = sX - 1; i <= (sX + 1); i++) {
+                console.log('X = ' + i);
+                console.log('sX = ' + sX);
+                $('#' + i + '-' + sY - 1).css('background-color', 'black');
+                if (i !== sX) $('#' + i + '-' + sY).css('background-color', 'black');
+                $('#' + i + '-' + sY + 1).css('background-color', 'black');
+            }
+
+            // if(sX === mapStorage.length){
+            //     for(i = sX - 1; i <= sX; i++){
+            //         console.log('X = ' + i);
+            //         console.log('sX = ' + sX); 
+            //         $('#' + i + '-' + sY - 1).css('background-color', '#00fce7');
+            //         if(i !== sX) $('#' + i + '-' + sY).css('background-color', '#00fce7');
+            //         $('#' + i + '-' + sY + 1).css('background-color', '#00fce7');
+            //     }
+            // } else if (sX === 0) {
+            //     for(i = sX; i <= sX + 1; i++){
+            //         console.log('X = ' + i);
+            //         console.log('sX = ' + sX); 
+            //         $('#' + i + '-' + sY - 1).css('background-color', '#00fce7');
+            //         if(i !== sX) $('#' + i + '-' + sY).css('background-color', '#00fce7');
+            //         $('#' + i + '-' + sY + 1).css('background-color', '#00fce7');
+            //     }
+            // } else {
+            //     for(i = sX - 1; i <= sX + 1; i++){
+            //         console.log('X = ' + i);
+            //         console.log('sX = ' + sX); 
+            //         $('#' + i + '-' + sY - 1).css('background-color', '#00fce7');
+            //         if(i !== sX) $('#' + i + '-' + sY).css('background-color', '#00fce7');
+            //         $('#' + i + '-' + sY + 1).css('background-color', '#00fce7');
+            //     }
+            // }
+        }
         $(document).ready(function () {
-            //Login error check.
+            //Login error check. --Needs to express the error to the user.
             socket.on('playerInfoLogin', function (data) {
                 switch (data.info) {
                     case 'username':
@@ -104,7 +141,7 @@
                         break;
                 }
             });
-            //Emitting room requst.
+            //Emitting player info. -- 100%
             $('#submitPlayerInfo').click(function () {
                 console.log('button pressed');
                 socket.emit('playerInfo', {
@@ -112,14 +149,14 @@
                     password: $('#password').val()
                 });
             });
-            //Emitting room request
+            //Emitting room request -- 80%. Needs testing if a player can maliciously create numerous of rooms.
             $('#roomIdSubmit').click(function () {
                 socket.emit('joinRoomReq', {
                     room: $('#roomId').val()
                 });
                 console.log('room id(' + $('#roomId').val() + ') sumitted');
             });
-            //Map coloring
+            //Map coloring -- 100%
             socket.on('roomInfo', function (data) {
                 var tileColor;
                 mapStorage = data.mapData;
@@ -151,7 +188,7 @@
                     }
                 }
             });
-            //Once entered in room change some css.
+            //Once entered in room show map. -- 100%
             socket.on('enteredRoom', function (data) {
                 if (data.info) {
                     $('.roomInfo').css('display', 'none');
@@ -159,7 +196,7 @@
                     $('.container-info').css('display', 'inline-block');
                 }
             });
-            //Code responsible for tile responsivness
+            //Code responsible for tile responsivness -- WIP
             $('.hex').click(function (event) {
                 console.log('Clicked on tile: ' + event.target.id);
                 var unitName, unitPack = mapStorage[event.target.id[0]][event.target.id[2]];
@@ -188,9 +225,12 @@
                 $('#selectedUnitHp').html(unitPack.hp);
                 $('#selectedUnitArmour').html(unitPack.ar);
                 console.log("selected unit: " + mapStorage[event.target.id[0]][event.target.id[2]].value);
+
+                //event.target.id[0] event.target.id[1]
+                adjecent(event.target.id[0], event.target.id[1]);
             });
+            //Turn indication -- 100%.
             socket.on('turnIndicator', function (data) {
-                console.log(data.turn);
                 if (data.turn) $('#gamePhaseTracker').html('Your turn');
                 else $('#gamePhaseTracker').html('Oponnent turn');
             });
@@ -199,7 +239,7 @@
             });
         });
     </script>
-
+    <!-- Login stuff 100% -->
     <div class="login-clean">
         <form>
             <h2 class="sr-only">Login Form</h2>
@@ -217,12 +257,12 @@
             </div>
         </form>
     </div>
-
+    <!-- Info for textbox 100% -->
     <div class="roomInfo">
         <input type="text" placeholder="Room name" id="roomId">
         <input type="button" value="Join" id="roomIdSubmit">
     </div>
-
+    <!-- Game map 100% -->
     <div class="container-game">
         <ol class="odd">
             <li id="0-0" class='hex'></li>
@@ -271,7 +311,7 @@
             <li id="6-4" class='hex'></li>
         </ol>
     </div>
-
+    <!-- Game info window WIP -->
     <div class="container-info">
         <br />
         <h1>GAME PHASE:

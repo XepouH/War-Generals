@@ -9,8 +9,9 @@ var debugging = 0;
 
 app.use(express.static(__dirname + '/client'));
 
-http.listen(90, '0.0.0.0');
+http.listen(90, '192.168.0.103');
 
+var sockets = [];
 var players = [];
 var rooms = [];
 var map = [
@@ -24,7 +25,11 @@ var map = [
 ];
 
 io.on('connection', function (socket) {
+
+    var temp = socket.id;
     socket.id = Math.floor(Math.random() * 1000);
+    sockets[socket.id] = temp;
+
     console.log('connection from id: ', socket.id);
     //Player login handling is here
     socket.on('playerInfo', function (data) {
@@ -43,11 +48,11 @@ io.on('connection', function (socket) {
         }
     });
     // Room requests. 
-    // If room found and not empty player joins. 
+    // If room found and not empty player joins and gets flag for being in a room. 
     // If room found and full player doesn't join. 
     // If room not found it is created.
     socket.on('joinRoomReq', function (data) {
-        if (rooms) {
+        if (rooms && players[socket.id].state !== 'room') {
             var roomFound = false;
             rooms.forEach(function (element) {
                 if (element.name.toLowerCase() === data.room.toLowerCase()) {
@@ -56,6 +61,7 @@ io.on('connection', function (socket) {
                         element.full = true;
                         element.opponent = socket.id;
                         roomFound = true;
+
                     } else {
                         socket.emit('roomInfo', { info: 'full' });
                         roomFound = true;
@@ -86,11 +92,17 @@ io.on('connection', function (socket) {
         if (rooms) {
             if (rooms[players[socket.id].roomId].turn) rooms[players[socket.id].roomId].turn = false;
             else rooms[players[socket.id].roomId].turn = true;
+            sendTurnIndicationToPlayers(socket);
+            playerMapUpdate(socket);
+            
         }
+    });
+    socket.on('reqMap', function(){
+        playerMapUpdate(socket);
     });
     setInterval(function () {
         sendTurnIndicationToPlayers(socket);
-        playerMapUpdate(socket);
+        //playerMapUpdate(socket);
     }, 1000 / 25);
 });
 
@@ -103,13 +115,22 @@ function sendTurnIndicationToPlayers(socket) {
     }, this);
 }
 
+// function playerMapUpdate(socket) {
+//     players.forEach(function (element) {
+//         if (element.state === 'room') {
+//             if (rooms[element.roomId])
+//                 socket.emit('roomInfo', { mapData: rooms[element.roomId].roomMap });
+//         }
+//     }, this);
+// }
+
 function playerMapUpdate(socket) {
-    players.forEach(function (element) {
-        if (element.state === 'room') {
-            if (rooms[element.roomId])
-                socket.emit('roomInfo', { mapData: rooms[element.roomId].roomMap });
-        }
-    }, this);
+    if(players[socket.id].state === 'room' && rooms[players[socket.id].roomId]){
+        socket.emit('roomInfo', { mapData: rooms[players[socket.id].roomId].roomMap });
+        console.log('map emitted'); 
+        if(rooms[players[socket.id].roomId].id === socket.id) socket.broadcast.to(sockets[rooms[players[socket.id].roomId].opponent]).emit('roomInfo', { mapData: rooms[players[socket.id].roomId].roomMap });
+        else socket.broadcast.to(sockets[players[socket.id].roomId].id).emit('roomInfo', { mapData: rooms[players[socket.id].roomId].roomMap });
+    }
 }
 
 function enterRoom(socket, element) {
@@ -117,4 +138,6 @@ function enterRoom(socket, element) {
     players[socket.id].roomId = element.id;
     players[socket.id].state = 'room';
     socket.emit('enteredRoom', { info: true });
+    sendTurnIndicationToPlayers(socket);
+    playerMapUpdate(socket);
 }
